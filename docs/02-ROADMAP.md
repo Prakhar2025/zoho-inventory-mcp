@@ -31,15 +31,15 @@ Acceptance: seed script runs green, data visible in the Zoho UI, a raw authentic
 
 Goal: a clean, tested library: the part a senior engineer would actually review.
 
-- [ ] `auth.py`: token cache with expiry awareness, auto-refresh, one-flight refresh guard
-- [ ] `rate_limiter.py`: serial requests with minimum spacing, plus 429 handling honoring
+- [x] `auth.py`: token cache with expiry awareness, auto-refresh, one-flight refresh guard
+- [x] `rate_limiter.py`: serial requests with minimum spacing, plus 429 handling honoring
       `Retry-After` with exponential backoff and jitter
-- [ ] `client.py`: httpx with timeouts, pagination helper, org id header, error mapping to the
+- [x] `client.py`: httpx with timeouts, pagination helper, org id header, error mapping to the
       taxonomy in `errors.py`
-- [ ] `models.py`: normalized Item and SalesOrder models (documented field subsets)
-- [ ] Primitives: list/get/search for items and sales orders, with filters
-- [ ] Unit tests (respx mocks) for auth refresh, rate limiting, pagination, error mapping
-- [ ] `scripts/smoke_live.py`: quick live check against the real org
+- [x] `models.py`: normalized Item and SalesOrder models (documented field subsets)
+- [x] Primitives: list/get/search for items and sales orders, with filters
+- [x] Unit tests (respx mocks) for auth refresh, rate limiting, pagination, error mapping
+- [x] `scripts/smoke_live.py`: quick live check against the real org
 
 Acceptance: `py -3.12 -m pytest` green, smoke script prints real (fictional) data.
 
@@ -47,10 +47,10 @@ Acceptance: `py -3.12 -m pytest` green, smoke script prints real (fictional) dat
 
 Goal: the deliverable itself, a runnable MCP server.
 
-- [ ] `server.py` with FastMCP: the six read-only tools with LLM-oriented descriptions
-- [ ] Structured error returns (no stack traces leak to the agent)
-- [ ] JSONL audit log of every tool call
-- [ ] Tests: list tools, call each tool (via the MCP client against the server, mocked HTTP)
+- [x] `server.py` with FastMCP: the six read-only tools with LLM-oriented descriptions
+- [x] Structured error returns (no stack traces leak to the agent)
+- [x] JSONL audit log of every tool call
+- [x] Tests: list tools, call each tool (via the MCP client against the server, mocked HTTP)
 
 Acceptance: `py -3.12 -m zoho_inventory_mcp.server` starts; an MCP client can list and call tools.
 
@@ -114,8 +114,8 @@ Acceptance: form submitted with a working, accessible link.
 | --- | --- | --- |
 | P0 | done | scaffold and docs committed |
 | P1 | done | auth verified live, org seeded with fictional data |
-| P2 | not started | |
-| P3 | not started | |
+| P2 | done | 34 unit tests green; live smoke passed against the seeded org |
+| P3 | done | protocol smoke over stdio: 6 read-only tools exposed and called |
 | P4 | not started | |
 | P5 | not started | |
 | P6 | not started | |

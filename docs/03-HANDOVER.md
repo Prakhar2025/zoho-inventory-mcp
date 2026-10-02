@@ -44,15 +44,24 @@ someone who was not here when it started.
 | --- | --- | --- |
 | P0 | done | scaffold and docs committed (first commit) |
 | P1 | done | auth verified live, LoomKart org seeded (see Verified facts) |
-| P2 to P8 | not started | see roadmap |
+| P2 | done | see roadmap and Verified facts |
+| P3 | done | protocol smoke over stdio passed |
+| P4 to P8 | not started | see roadmap |
 
 ## Immediate next action
 
-Phase P2 (agent action, no user input needed): build the connector core. Create the venv
-(`py -3.12 -m venv .venv` then `source .venv/Scripts/activate`), `pip install -e ".[dev]"`,
-then implement auth.py, rate_limiter.py, client.py, models.py, errors.py per
-docs/01-ARCHITECTURE.md, with unit tests (respx) and `scripts/smoke_live.py`. Acceptance:
-pytest green and the smoke script prints real seeded data. Nothing here needs the user.
+Phase P4 (agent action, no user input needed): demo agent on Bedrock.
+
+1. Add the dependency: `.venv/Scripts/pip install strands-agents` (accept the boto3
+   download, one time, a few MB) and record it in pyproject.
+2. Write `agent/demo.py`: a Strands agent whose MCP client points at the local stdio
+   server (`py -3.12 -m zoho_inventory_mcp`) and whose model is a Bedrock model id
+   available in the user's account (verify with a boto3 bedrock list call; record the
+   chosen id in Verified facts).
+3. Ask the three scripted merchant questions, save the transcript to
+   `agent/transcript.md`, and confirm tool calls appear in logs/audit.jsonl.
+
+Then P5 evals, P6 docs and video, P7 optional Lambda deploy, P8 submission.
 
 ## Verified facts (fill in as phases complete; trust nothing not written here)
 
@@ -73,6 +82,12 @@ pytest green and the smoke script prints real seeded data. Nothing here needs th
   the last 4 weeks (10 confirmed, 2 draft), reference numbers `LK-SO-*`
 - The seeding token lives in `.env` as `ZOHO_SEED_REFRESH_TOKEN` (write scopes, revocable); the
   connector token `ZOHO_REFRESH_TOKEN` stays read-only
+- The pip `mcp` package is 2.x: FastMCP was renamed to MCPServer
+  (`from mcp.server.mcpserver import MCPServer`); tool annotations use snake_case
+  attributes in Python (read_only_hint) and camelCase only on the wire
+- Zoho free-plan orgs do not return stock levels for API-created items
+  (initial_stock comes back empty), so Item.stock_on_hand stays optional and no
+  doc promises stock numbers
 - Actual model id used for the Bedrock demo agent: decided in P4, record here
 
 ## Pitfalls learned so far
