@@ -1,0 +1,90 @@
+# Eval cases for the LoomKart demo agent.
+#
+# Each case is a merchant question a real FDE would expect the commerce agent
+# to handle. A case passes when:
+#   1. every tool named in expected_tools appears in the agent's tool trace
+#      (any order; extra tools are allowed), and
+#   2. every string in must_mention appears in the answer (case-insensitive).
+# An empty expected_tools means "must answer gracefully without crashing",
+# which is itself the behavior under test (negative cases).
+
+cases:
+  - id: catalog_overview
+    question: "What products do we sell, and what do they cost? One line per product."
+    expected_tools: [inventory_list_items]
+    must_mention: ["Bedsheet", "Doormat"]
+
+  - id: catalog_full_listing
+    question: "List every product in the catalog with its price."
+    expected_tools: [inventory_list_items]
+    must_mention: ["Dhurrie", "Kalamkari"]
+
+  - id: catalog_count
+    question: "How many products are in the catalog?"
+    expected_tools: [inventory_list_items]
+    must_mention: ["8"]
+
+  - id: item_search_by_name
+    question: "Do we stock jaipur bedsheets?"
+    expected_tools: [inventory_search_items]
+    must_mention: ["Jaipur"]
+
+  - id: item_search_by_sku
+    question: "Look up item LK-RUG-005 for me."
+    expected_tools: [inventory_search_items]
+    must_mention: ["Dhurrie"]
+
+  - id: item_get_full_details
+    question: "I have the SKU LK-BED-001 but I need the internal item id and the exact rate. Look it up properly: first find the item, then fetch it by id."
+    expected_tools: [inventory_search_items, inventory_get_item]
+    must_mention: ["LK-BED-001"]
+
+  - id: negative_product_query
+    question: "Do we sell mobile phones?"
+    expected_tools: []
+    must_mention: []
+
+  - id: orders_by_customer
+    question: "Find any orders from Sneha Iyer and tell me exactly what she bought."
+    expected_tools: [orders_search_sales_orders]
+    must_mention: ["Sneha"]
+
+  - id: orders_by_customer_totals
+    question: "Show me all orders from Ananya Rao with their totals."
+    expected_tools: [orders_search_sales_orders]
+    must_mention: ["Ananya"]
+
+  - id: draft_orders
+    question: "Which orders are still in draft status and who placed them?"
+    expected_tools: [orders_list_sales_orders]
+    must_mention: ["SO-00011"]
+
+  - id: confirmed_awaiting_fulfillment
+    question: "Which customers have confirmed orders that are not yet fulfilled?"
+    expected_tools: [orders_list_sales_orders]
+    must_mention: ["Rohan"]
+
+  - id: recent_orders
+    question: "Show me the 3 most recent orders."
+    expected_tools: [orders_list_sales_orders]
+    must_mention: ["SO-00010"]
+
+  - id: order_by_number
+    question: "Look up order SO-00005: who placed it, and what are its status and total?"
+    expected_tools: [orders_get_sales_order]
+    must_mention: ["Vikram", "confirmed"]
+
+  - id: negative_customer_query
+    question: "Show me all orders from Ramesh Dubey."
+    expected_tools: []
+    must_mention: []
+
+  - id: confirmed_order_value
+    question: "What is the total value of all confirmed orders together?"
+    expected_tools: [orders_list_sales_orders]
+    must_mention: []
+
+  - id: items_within_customer_orders
+    question: "Which LoomKart items appear in Vikram Singh's orders?"
+    expected_tools: [orders_search_sales_orders]
+    must_mention: ["Vikram"]
