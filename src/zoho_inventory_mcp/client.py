@@ -80,9 +80,20 @@ class ZohoInventoryClient:
         return _build_page(records, page, per_page, payload)
 
     async def get_item(self, item_id: str) -> Item:
-        """Fetch one item by id."""
-        payload = await self._request("GET", f"/items/{item_id}")
-        return Item.model_validate(payload["item"])
+        """Fetch one item by internal id, falling back to an exact SKU match.
+
+        Merchants and agents naturally say "LK-RUG-005", not Zoho's internal
+        item id, so a failed id lookup resolves the value as a SKU via search.
+        """
+        try:
+            payload = await self._request("GET", f"/items/{item_id}")
+            return Item.model_validate(payload["item"])
+        except NotFoundError:
+            matches = await self.search_items(item_id, limit=5)
+            for item in matches:
+                if item.sku and item.sku.casefold() == item_id.strip().casefold():
+                    return item
+            raise
 
     async def search_items(self, query: str, *, limit: int = 10) -> list[Item]:
         """Search items by keyword in name or SKU.
@@ -122,9 +133,24 @@ class ZohoInventoryClient:
         return _build_page(records, page, per_page, payload)
 
     async def get_sales_order(self, salesorder_id: str) -> SalesOrder:
-        """Fetch one sales order by id, including its line items."""
-        payload = await self._request("GET", f"/salesorders/{salesorder_id}")
-        return SalesOrder.model_validate(payload["salesorder"])
+        """Fetch one sales order by internal id, order number, or reference number.
+
+        The direct id lookup is tried first; if it misses, the value is resolved
+        as a sales order number (SO-00005) or a merchant reference
+        (LK-SO-018-20260914) through search, so callers never need to know
+        Zoho's internal id scheme.
+        """
+        try:
+            payload = await self._request("GET", f"/salesorders/{salesorder_id}")
+            return SalesOrder.model_validate(payload["salesorder"])
+        except NotFoundError:
+            matches = await self.search_sales_orders(salesorder_id, limit=5)
+            wanted = salesorder_id.strip().casefold()
+            for order in matches:
+                identifiers = {order.salesorder_number or "", order.reference_number or ""}
+                if wanted in {value.casefold() for value in identifiers}:
+                    return order
+            raise
 
     async def search_sales_orders(self, query: str, *, limit: int = 10) -> list[SalesOrder]:
         """Search sales orders by keyword (customer name or order number)."""

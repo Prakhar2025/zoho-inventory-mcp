@@ -78,9 +78,39 @@ async def test_get_missing_item_raises_not_found(client, respx_mock):
     respx_mock.get(f"{API_BASE}/items/missing").mock(
         return_value=httpx.Response(404, json={"message": "not found"})
     )
+    respx_mock.get(f"{API_BASE}/items").mock(
+        return_value=httpx.Response(200, json={"code": 0, "items": []})
+    )
 
     with pytest.raises(NotFoundError):
         await client.get_item("missing")
+
+
+async def test_get_item_falls_back_to_exact_sku_match(client, respx_mock):
+    def search_handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.params.get("search_text") == "LK-BED-001"
+        return httpx.Response(200, json={"code": 0, "items": [ITEM_A, ITEM_B]})
+
+    respx_mock.get(f"{API_BASE}/items/LK-BED-001").mock(
+        return_value=httpx.Response(404, json={"message": "not found"})
+    )
+    respx_mock.get(f"{API_BASE}/items").mock(side_effect=search_handler)
+
+    item = await client.get_item("LK-BED-001")
+
+    assert item.item_id == "i1"
+
+
+async def test_get_item_fallback_ignores_partial_sku_matches(client, respx_mock):
+    respx_mock.get(f"{API_BASE}/items/LK-BED-009").mock(
+        return_value=httpx.Response(404, json={"message": "not found"})
+    )
+    respx_mock.get(f"{API_BASE}/items").mock(
+        return_value=httpx.Response(200, json={"code": 0, "items": [ITEM_A]})
+    )
+
+    with pytest.raises(NotFoundError):
+        await client.get_item("LK-BED-009")
 
 
 async def test_rate_limit_is_retried_until_success(client, respx_mock):
@@ -190,6 +220,45 @@ async def test_get_sales_order_maps_line_items(client, respx_mock):
 
     assert order.line_items[0].item_total == 1899.0
     assert order.reference_number == "LK-SO-028-20260904"
+
+
+async def test_get_sales_order_falls_back_to_order_number(client, respx_mock):
+    by_number = dict(ORDER, salesorder_number="SO-00005")
+    respx_mock.get(f"{API_BASE}/salesorders/SO-00005").mock(
+        return_value=httpx.Response(404, json={"message": "not found"})
+    )
+    respx_mock.get(f"{API_BASE}/salesorders").mock(
+        return_value=httpx.Response(200, json={"code": 0, "salesorders": [by_number]})
+    )
+
+    order = await client.get_sales_order("SO-00005")
+
+    assert order.salesorder_id == "so1"
+
+
+async def test_get_sales_order_falls_back_to_reference_number(client, respx_mock):
+    respx_mock.get(f"{API_BASE}/salesorders/LK-SO-028-20260904").mock(
+        return_value=httpx.Response(404, json={"message": "not found"})
+    )
+    respx_mock.get(f"{API_BASE}/salesorders").mock(
+        return_value=httpx.Response(200, json={"code": 0, "salesorders": [ORDER]})
+    )
+
+    order = await client.get_sales_order("LK-SO-028-20260904")
+
+    assert order.salesorder_number == "SO-0001"
+
+
+async def test_get_sales_order_fallback_requires_exact_identifier(client, respx_mock):
+    respx_mock.get(f"{API_BASE}/salesorders/SO-99999").mock(
+        return_value=httpx.Response(404, json={"message": "not found"})
+    )
+    respx_mock.get(f"{API_BASE}/salesorders").mock(
+        return_value=httpx.Response(200, json={"code": 0, "salesorders": [ORDER]})
+    )
+
+    with pytest.raises(NotFoundError):
+        await client.get_sales_order("SO-99999")
 
 
 async def test_search_items_filters_results_locally(client, respx_mock):

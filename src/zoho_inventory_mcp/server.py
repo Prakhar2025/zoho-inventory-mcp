@@ -158,10 +158,11 @@ def register_tools(
 
     @mcp.tool(annotations=READ_ONLY)
     async def inventory_get_item(item_id: str) -> dict[str, Any]:
-        """Get one inventory item by its item_id.
+        """Get one inventory item by its item_id or by SKU.
 
-        Use when the agent already knows the id, for example from a previous
-        list or search call, and needs full details for that single product.
+        Use when the agent knows either the internal id (from a previous call)
+        or the merchant-facing SKU (LK-BED-001) and needs the single product
+        record.
         """
         return await guarded(
             "inventory_get_item",
@@ -225,10 +226,11 @@ def register_tools(
 
     @mcp.tool(annotations=READ_ONLY)
     async def orders_get_sales_order(salesorder_id: str) -> dict[str, Any]:
-        """Get one sales order by its salesorder_id, including line items.
+        """Get one sales order by internal id, order number, or reference number.
 
-        Use when the agent already knows the id and needs the full order:
-        items, quantities, rates, and totals.
+        Accepts Zoho ids (from a previous call), merchant numbers (SO-00005), or
+        reference codes (LK-SO-018-20260914). Returns the full order including
+        line items, quantities, rates, and totals.
         """
         return await guarded(
             "orders_get_sales_order",
