@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     audit_log_path: str = "logs/audit.jsonl"
 
+    # Demo agent (agent/demo.py): Bedrock model id used for the merchant walkthrough.
+    bedrock_model_id: str = ""
+
     @property
     def accounts_base(self) -> str:
         return _ACCOUNTS_HOSTS[self.zoho_dc]

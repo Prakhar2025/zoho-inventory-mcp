@@ -27,8 +27,9 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import date, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 ENV_PATH = REPO_ROOT / ".env"
@@ -39,15 +40,13 @@ API_BASE = "https://www.zohoapis.in/inventory/v1"
 # Write scopes ONLY for seeding. The read-only connector token stays untouched.
 # Listing before creating needs READ as well as CREATE, otherwise Zoho rejects
 # the list calls with HTTP 401 code 57 (learned live in P1).
-SCOPES_WRITE = ",".join(
-    [
-        "ZohoInventory.contacts.READ",
-        "ZohoInventory.contacts.CREATE",
-        "ZohoInventory.items.READ",
-        "ZohoInventory.items.CREATE",
-        "ZohoInventory.salesorders.READ",
-        "ZohoInventory.salesorders.CREATE",
-    ]
+SCOPES_WRITE = (
+    "ZohoInventory.contacts.READ,"
+    "ZohoInventory.contacts.CREATE,"
+    "ZohoInventory.items.READ,"
+    "ZohoInventory.items.CREATE,"
+    "ZohoInventory.salesorders.READ,"
+    "ZohoInventory.salesorders.CREATE"
 )
 
 CALL_SPACING_SECONDS = 1.0
@@ -210,7 +209,8 @@ def seed_items(token: str, org_id: str) -> dict[str, str]:
 
 
 def seed_orders(token: str, org_id: str, contacts: dict[str, str], items: dict[str, str]) -> None:
-    today = date.today()
+    # Anchor order dates to the org's timezone (IST), not the machine's clock.
+    today = datetime.now(ZoneInfo("Asia/Kolkata")).date()
     created_count, skipped = 0, 0
     for days_ago, customer_name, lines, note in ORDER_PLAN:
         order_date = (today - timedelta(days=days_ago)).isoformat()

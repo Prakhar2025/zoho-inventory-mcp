@@ -40,13 +40,11 @@ ACCOUNTS_BASE = "https://accounts.zoho.in"
 API_BASE = "https://www.zohoapis.in/inventory/v1"
 
 # Read-only scopes: everything the connector needs and nothing more.
-SCOPES = ",".join(
-    [
-        "ZohoInventory.settings.READ",
-        "ZohoInventory.items.READ",
-        "ZohoInventory.salesorders.READ",
-        "ZohoInventory.contacts.READ",
-    ]
+SCOPES = (
+    "ZohoInventory.settings.READ,"
+    "ZohoInventory.items.READ,"
+    "ZohoInventory.salesorders.READ,"
+    "ZohoInventory.contacts.READ"
 )
 
 

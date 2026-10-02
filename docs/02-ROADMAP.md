@@ -78,11 +78,11 @@ Acceptance: one command prints the eval report.
 
 Goal: the package the evaluator actually reads first.
 
-- [ ] Full README rewrite: merchant story up top, 10-minute quickstart, architecture summary
-- [ ] `docs/CAPABILITIES.md`: what the agent can and cannot do (the required short document)
-- [ ] Limitations and scale notes (what breaks at 10x, and the long-term fix)
-- [ ] "How we would measure impact" section (deflection rate, time-to-answer, tickets avoided)
-- [ ] Demo video script, user records a 2 to 3 minute video, link goes at the top of the README
+- [x] Full README rewrite: merchant story up top, 10-minute quickstart, architecture summary
+- [x] `docs/CAPABILITIES.md`: what the agent can and cannot do (the required short document)
+- [x] Limitations and scale notes (what breaks at 10x, and the long-term fix)
+- [x] "How we would measure impact" section (deflection rate, time-to-answer, tickets avoided)
+- [x] Demo video script, user records a 2 to 3 minute video, link goes at the top of the README
 
 Acceptance: a fresh clone walkthrough succeeds following only the README.
 
@@ -118,6 +118,6 @@ Acceptance: form submitted with a working, accessible link.
 | P3 | done | protocol smoke over stdio: 6 read-only tools exposed and called |
 | P4 | done | live demo on Bedrock (Nova 2 Lite); transcript committed |
 | P5 | done | 16/16 eval cases pass; report committed |
-| P6 | not started | |
+| P6 | docs done | README, CAPABILITIES, video script committed; user records the video |
 | P7 | not started | optional |
 | P8 | not started | |
