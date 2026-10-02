@@ -58,9 +58,9 @@ Acceptance: `py -3.12 -m zoho_inventory_mcp.server` starts; an MCP client can li
 
 Goal: end-to-end proof that an Agent-Studio-style agent can use the connector.
 
-- [ ] Add `strands-agents` dependency (accept the boto3 download, one time, a few MB)
-- [ ] `agent/demo.py`: Strands agent + MCP client + Bedrock model available in the user's account
-- [ ] Three scripted merchant questions, transcript saved to `agent/transcript.md`
+- [x] Add `strands-agents` dependency (accept the boto3 download, one time, a few MB)
+- [x] `agent/demo.py`: Strands agent + MCP client + Bedrock model available in the user's account
+- [x] Three scripted merchant questions, transcript saved to `agent/transcript.md`
 
 Acceptance: one command runs the demo; transcript shows correct tool usage and answers.
 
@@ -68,9 +68,9 @@ Acceptance: one command runs the demo; transcript shows correct tool usage and a
 
 Goal: measurable quality, the differentiator almost nobody else ships.
 
-- [ ] `evals/cases.yaml`: 15 to 20 cases (question, expected tool sequence, answer assertions)
-- [ ] `evals/run_evals.py`: runs cases, prints a pass-rate table
-- [ ] Document any known-fail cases honestly
+- [x] `evals/cases.yaml`: 15 to 20 cases (question, expected tool sequence, answer assertions)
+- [x] `evals/run_evals.py`: runs cases, prints a pass-rate table
+- [x] Document any known-fail cases honestly
 
 Acceptance: one command prints the eval report.
 
@@ -116,8 +116,8 @@ Acceptance: form submitted with a working, accessible link.
 | P1 | done | auth verified live, org seeded with fictional data |
 | P2 | done | 34 unit tests green; live smoke passed against the seeded org |
 | P3 | done | protocol smoke over stdio: 6 read-only tools exposed and called |
-| P4 | not started | |
-| P5 | not started | |
+| P4 | done | live demo on Bedrock (Nova 2 Lite); transcript committed |
+| P5 | done | 16/16 eval cases pass; report committed |
 | P6 | not started | |
 | P7 | not started | optional |
 | P8 | not started | |

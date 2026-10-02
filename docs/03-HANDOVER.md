@@ -46,22 +46,22 @@ someone who was not here when it started.
 | P1 | done | auth verified live, LoomKart org seeded (see Verified facts) |
 | P2 | done | see roadmap and Verified facts |
 | P3 | done | protocol smoke over stdio passed |
-| P4 to P8 | not started | see roadmap |
+| P4 | done | demo agent live, transcript in agent/transcript.md |
+| P5 | done | evals 16/16 pass, report in evals/report.md |
+| P6 to P8 | not started | see roadmap |
 
 ## Immediate next action
 
-Phase P4 (agent action, no user input needed): demo agent on Bedrock.
+Phase P6 (mostly agent action): final docs and demo video.
 
-1. Add the dependency: `.venv/Scripts/pip install strands-agents` (accept the boto3
-   download, one time, a few MB) and record it in pyproject.
-2. Write `agent/demo.py`: a Strands agent whose MCP client points at the local stdio
-   server (`py -3.12 -m zoho_inventory_mcp`) and whose model is a Bedrock model id
-   available in the user's account (verify with a boto3 bedrock list call; record the
-   chosen id in Verified facts).
-3. Ask the three scripted merchant questions, save the transcript to
-   `agent/transcript.md`, and confirm tool calls appear in logs/audit.jsonl.
-
-Then P5 evals, P6 docs and video, P7 optional Lambda deploy, P8 submission.
+1. Rewrite README.md: merchant story up top, 10-minute quickstart, architecture summary,
+   eval badge numbers (16/16), and the demo video link placeholder.
+2. Write docs/CAPABILITIES.md: what the agent can and cannot do (the assignment's
+   required short document).
+3. Write the demo video script; the USER records the 2 to 3 minute video and the link
+   goes at the top of the README.
+4. P7 (optional, needs user go-ahead: deploys into their AWS account) and P8 submission
+   (user flips the repo to public and fills the form) follow.
 
 ## Verified facts (fill in as phases complete; trust nothing not written here)
 
@@ -88,7 +88,13 @@ Then P5 evals, P6 docs and video, P7 optional Lambda deploy, P8 submission.
 - Zoho free-plan orgs do not return stock levels for API-created items
   (initial_stock comes back empty), so Item.stock_on_hand stays optional and no
   doc promises stock numbers
-- Actual model id used for the Bedrock demo agent: decided in P4, record here
+- Bedrock model in use: `global.amazon.nova-2-lite-v1:0` (first-party, no marketplace
+  subscription; Anthropic models are blocked on this account by INVALID_PAYMENT_INSTRUMENT)
+- Get primitives accept friendly identifiers: sales orders by id, SO number, or merchant
+  reference; items by id or SKU (search fallback after a 404, unit tested)
+- Eval suite: `.venv/Scripts/python evals/run_evals.py`; 16/16 cases passed on 2026-10-02;
+  report committed at evals/report.md
+- Actual model id used for the Bedrock demo agent: global.amazon.nova-2-lite-v1:0
 
 ## Pitfalls learned so far
 
