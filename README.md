@@ -24,7 +24,7 @@ of a login, a search, and a screenshot.
 
 ![Console answering merchant questions live](docs/demo/console.png)
 
-The video above the fold: [docs/demo/zohomcp-demo.mp4](docs/demo/zohomcp-demo.mp4) (1m57s,
+The video above the fold: [docs/demo/zohomcp-demo.mp4](docs/demo/zohomcp-demo.mp4) (1m15s,
 narrated) walks through the problem, a live session of the console answering three merchant
 questions while tool calls stream into the trace panel, and the engineering that makes it
 trustworthy. YouTube link added at submission.
@@ -39,7 +39,7 @@ trustworthy. YouTube link added at submission.
 | Merchant console | One-page ops UI: chat with the agent while every tool call streams into a live trace panel ([screenshot](docs/demo/console.png)) |
 | AWS hosting stack | Probe-driven CloudFormation (S3 + CloudFront + API Gateway + Lambda) with deploy and teardown scripts in [infra/](infra/README.md) |
 | Eval suite | 16 merchant questions scored on tool usage and answer facts: [16/16 pass](evals/report.md) |
-| Test suite | 39 hermetic unit tests (mocked HTTP), plus live and protocol-level smoke scripts |
+| Test suite | 48 hermetic unit tests (mocked HTTP), plus live and protocol-level smoke scripts |
 
 ## Quickstart (about 10 minutes)
 
