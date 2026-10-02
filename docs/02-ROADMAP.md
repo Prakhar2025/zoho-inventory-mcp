@@ -108,6 +108,13 @@ Goal: convert work into a winning application.
 
 Acceptance: form submitted with a working, accessible link.
 
+## P9: merchant console (demo harness)
+
+- [x] `console/backend.py`: FastAPI app, SSE streaming of agent tokens and tool events
+- [x] Hand-crafted single-page console (no build step): chat plus live tool trace panel
+- [x] Token-based search with local-scan fallback, discovered by testing the console live
+- [x] 48 unit tests green; console verified live against the real org
+
 ## Status table (keep in sync with docs/03-HANDOVER.md)
 
 | Phase | Status | Notes |
@@ -121,3 +128,4 @@ Acceptance: form submitted with a working, accessible link.
 | P6 | docs done | README, CAPABILITIES, video script committed; user records the video |
 | P7 | not started | optional |
 | P8 | not started | |
+| P9 | done | console live on port 8630; search resilience fix verified live |

@@ -1,5 +1,7 @@
 # Zoho Inventory MCP Connector
 
+[![CI](https://github.com/Prakhar2025/zoho-inventory-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Prakhar2025/zoho-inventory-mcp/actions/workflows/ci.yml)
+
 A production-grade, read-only Model Context Protocol (MCP) connector that lets a commerce
 agent read items and sales orders from a Zoho Inventory organization: full OAuth 2.0,
 rate-limit handling, structured errors, an audit log, and an eval suite.
@@ -25,6 +27,7 @@ of a login, a search, and a screenshot.
 | Connector library | Async Zoho Inventory client: OAuth with single-flight refresh, client-side pacing, 429 backoff honoring Retry-After, error taxonomy the agent can react to |
 | MCP server | Six read-only tools over stdio, each annotated `readOnlyHint`, every call written to a JSONL audit log |
 | Demo agent | Strands agent on AWS Bedrock answering real merchant questions through the tools ([transcript](agent/transcript.md)) |
+| Merchant console | One-page ops UI: chat with the agent while every tool call streams into a live trace panel |
 | Eval suite | 16 merchant questions scored on tool usage and answer facts: [16/16 pass](evals/report.md) |
 | Test suite | 39 hermetic unit tests (mocked HTTP), plus live and protocol-level smoke scripts |
 
@@ -79,6 +82,18 @@ Prerequisites: Python 3.12, a free Zoho account, no credit card. No Docker neede
 
 Any MCP client can also use the server directly: run `python -m zoho_inventory_mcp` and
 point the client at it over stdio.
+
+### Merchant console
+
+```bash
+.venv/Scripts/python -m uvicorn console.backend:app --port 8630
+```
+
+Open http://127.0.0.1:8630. Chat with the agent on the left; on the right, every tool
+call streams in live with its arguments and durations, and session stats aggregate from
+the same numbers the audit log records. No build step: the console is hand-crafted
+HTML/CSS/JS served by the FastAPI backend, because a demo harness should not need a
+node_modules folder.
 
 ## Architecture
 
