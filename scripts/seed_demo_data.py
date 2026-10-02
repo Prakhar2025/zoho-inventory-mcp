@@ -37,10 +37,15 @@ ACCOUNTS_BASE = "https://accounts.zoho.in"
 API_BASE = "https://www.zohoapis.in/inventory/v1"
 
 # Write scopes ONLY for seeding. The read-only connector token stays untouched.
+# Listing before creating needs READ as well as CREATE, otherwise Zoho rejects
+# the list calls with HTTP 401 code 57 (learned live in P1).
 SCOPES_WRITE = ",".join(
     [
+        "ZohoInventory.contacts.READ",
         "ZohoInventory.contacts.CREATE",
+        "ZohoInventory.items.READ",
         "ZohoInventory.items.CREATE",
+        "ZohoInventory.salesorders.READ",
         "ZohoInventory.salesorders.CREATE",
     ]
 )
@@ -237,34 +242,41 @@ def seed_orders(token: str, org_id: str, contacts: dict[str, str], items: dict[s
 def main() -> None:
     env = load_env()
     if len(sys.argv) < 2:
-        print(__doc__)
-        print(f"Scope string for the Generate Code dialog:\n\n{SCOPES_WRITE}\n")
-        print("Then run:  py -3.12 scripts/seed_demo_data.py <grant_code>")
-        return
+        if env.get("ZOHO_SEED_REFRESH_TOKEN"):
+            print("Found ZOHO_SEED_REFRESH_TOKEN in .env, skipping exchange and seeding directly.")
+        else:
+            print(__doc__)
+            print(f"Scope string for the Generate Code dialog:\n\n{SCOPES_WRITE}\n")
+            print("Then run:  py -3.12 scripts/seed_demo_data.py <grant_code>")
+            return
+    else:
+        grant_code = sys.argv[1].strip()
+        for key in ("ZOHO_CLIENT_ID", "ZOHO_CLIENT_SECRET", "ZOHO_ORG_ID"):
+            if not env.get(key):
+                sys.exit(f"{key} missing in .env (finish scripts/get_refresh_token.py first)")
 
-    grant_code = sys.argv[1].strip()
+        print("Exchanging write-scope grant code for a seeding token...")
+        data = urllib.parse.urlencode(
+            {
+                "grant_type": "authorization_code",
+                "code": grant_code,
+                "client_id": env["ZOHO_CLIENT_ID"],
+                "client_secret": env["ZOHO_CLIENT_SECRET"],
+            }
+        ).encode()
+        req = urllib.request.Request(f"{ACCOUNTS_BASE}/oauth/v2/token", data=data)
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            out = json.loads(resp.read().decode())
+        if "refresh_token" not in out:
+            sys.exit(f"Exchange failed: {json.dumps(out)}")
+        save_env_values({"ZOHO_SEED_REFRESH_TOKEN": out["refresh_token"]})
+        print("Seeding token saved as ZOHO_SEED_REFRESH_TOKEN (separate from the read-only token).")
+
     for key in ("ZOHO_CLIENT_ID", "ZOHO_CLIENT_SECRET", "ZOHO_ORG_ID"):
         if not env.get(key):
-            sys.exit(f"{key} missing in .env (finish scripts/get_refresh_token.py first)")
+            sys.exit(f"{key} missing in .env")
 
-    print("Exchanging write-scope grant code for a seeding token...")
-    data = urllib.parse.urlencode(
-        {
-            "grant_type": "authorization_code",
-            "code": grant_code,
-            "client_id": env["ZOHO_CLIENT_ID"],
-            "client_secret": env["ZOHO_CLIENT_SECRET"],
-        }
-    ).encode()
-    req = urllib.request.Request(f"{ACCOUNTS_BASE}/oauth/v2/token", data=data)
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        out = json.loads(resp.read().decode())
-    if "refresh_token" not in out:
-        sys.exit(f"Exchange failed: {json.dumps(out)}")
-    save_env_values({"ZOHO_SEED_REFRESH_TOKEN": out["refresh_token"]})
-    print("Seeding token saved as ZOHO_SEED_REFRESH_TOKEN (separate from the read-only token).")
-
-    token = out["access_token"]
+    token = refresh_access_token(env, "ZOHO_SEED_REFRESH_TOKEN")
     org_id = env["ZOHO_ORG_ID"]
 
     print("Seeding customers...")
