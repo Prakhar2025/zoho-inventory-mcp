@@ -32,3 +32,6 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+extend-select = ["I"]
