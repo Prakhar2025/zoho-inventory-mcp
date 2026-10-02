@@ -20,6 +20,15 @@ into Zoho and click around. The connector is the missing pipe: it gives the agen
 read-only access to the merchant's own data, so the questions become one message instead
 of a login, a search, and a screenshot.
 
+## The demo, in 2 minutes
+
+![Console answering merchant questions live](docs/demo/console.png)
+
+The video above the fold: [docs/demo/zohomcp-demo.mp4](docs/demo/zohomcp-demo.mp4) (1m57s,
+narrated) walks through the problem, a live session of the console answering three merchant
+questions while tool calls stream into the trace panel, and the engineering that makes it
+trustworthy. YouTube link added at submission.
+
 ## What ships in this repo
 
 | Piece | What it is |
@@ -27,7 +36,8 @@ of a login, a search, and a screenshot.
 | Connector library | Async Zoho Inventory client: OAuth with single-flight refresh, client-side pacing, 429 backoff honoring Retry-After, error taxonomy the agent can react to |
 | MCP server | Six read-only tools over stdio, each annotated `readOnlyHint`, every call written to a JSONL audit log |
 | Demo agent | Strands agent on AWS Bedrock answering real merchant questions through the tools ([transcript](agent/transcript.md)) |
-| Merchant console | One-page ops UI: chat with the agent while every tool call streams into a live trace panel |
+| Merchant console | One-page ops UI: chat with the agent while every tool call streams into a live trace panel ([screenshot](docs/demo/console.png)) |
+| AWS hosting stack | Probe-driven CloudFormation (S3 + CloudFront + API Gateway + Lambda) with deploy and teardown scripts in [infra/](infra/README.md) |
 | Eval suite | 16 merchant questions scored on tool usage and answer facts: [16/16 pass](evals/report.md) |
 | Test suite | 39 hermetic unit tests (mocked HTTP), plus live and protocol-level smoke scripts |
 
