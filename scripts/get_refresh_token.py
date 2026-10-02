@@ -124,8 +124,15 @@ def exchange(grant_code: str) -> None:
     if not orgs:
         sys.exit("Token works but no organizations were returned. Check the org on inventory.zoho.in")
 
-    org = next((o for o in orgs if o.get("name", "").lower() == "loomkart"), orgs[0])
-    save_env_values({"ZOHO_ORG_ID": str(org["id"])})
+    org = next(
+        (o for o in orgs if str(o.get("name", "")).lower() == "loomkart"),
+        orgs[0],
+    )
+    # The organizations endpoint returns "organization_id" (not "id").
+    org_id = org.get("organization_id") or org.get("id")
+    if not org_id:
+        sys.exit(f"Unexpected organization payload: {json.dumps(org)}")
+    save_env_values({"ZOHO_ORG_ID": str(org_id)})
     print(f"Organization: {org['name']} (org id saved to .env)")
     print("\nDone. .env is fully configured. Next: scripts/seed_demo_data.py (phase 1).")
 
