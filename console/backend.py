@@ -27,8 +27,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from agent.runner import DEFAULT_MODEL_ID, make_agent, start_mcp_client
-from console.events import map_stream_event, sse_frame
 
+from console.events import map_stream_event, sse_frame
 from zoho_inventory_mcp.config import get_settings
 from zoho_inventory_mcp.errors import ZohoError
 

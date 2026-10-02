@@ -46,6 +46,11 @@ def map_stream_event(event: dict[str, Any], state: dict[str, Any]) -> list[dict[
     return out
 
 
+def build_done_event(result: Any) -> dict[str, Any]:
+    """Public alias: build the final event for one question from a result."""
+    return _done_event(result)
+
+
 def _done_event(result: Any) -> dict[str, Any]:
     """Build the final event for one question from the agent result."""
     metrics = getattr(result, "metrics", None)
