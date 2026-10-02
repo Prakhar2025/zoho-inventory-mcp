@@ -17,6 +17,12 @@ dev = [
     "respx>=0.21",
     "ruff>=0.5",
 ]
+agent = [
+    "strands-agents>=1.57",
+]
+evals = [
+    "pyyaml>=3.14",
+]
 
 [build-system]
 requires = ["hatchling"]
