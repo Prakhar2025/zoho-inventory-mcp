@@ -100,8 +100,10 @@ async function ask(question) {
 function handleEvent(ev, agentMsg) {
   switch (ev.type) {
     case "token": {
-      const text = agentMsg.querySelector(".msg-text");
-      text.textContent += ev.text;
+      const textEl = agentMsg.querySelector(".msg-text");
+      const raw = (agentMsg.dataset.raw || "") + ev.text;
+      agentMsg.dataset.raw = raw;
+      renderAnswer(textEl, raw);
       scrollBottom();
       break;
     }
@@ -110,8 +112,9 @@ function handleEvent(ev, agentMsg) {
       break;
     }
     case "done": {
-      const text = agentMsg.querySelector(".msg-text");
-      text.textContent = ev.answer;
+      const textEl = agentMsg.querySelector(".msg-text");
+      agentMsg.dataset.raw = ev.answer;
+      renderAnswer(textEl, ev.answer);
       for (const tool of ev.tools) {
         upsertToolRow(tool.name, null, "ok", tool);
       }
@@ -136,6 +139,21 @@ function handleEvent(ev, agentMsg) {
 }
 
 /* ---------- message builders ---------- */
+
+/* Renders the tiny markdown the model actually emits: **bold** only. Text is
+   inserted as text nodes, so nothing from the model can become markup. */
+function renderAnswer(el, raw) {
+  el.textContent = "";
+  for (const part of raw.split(/(\*\*[^*]+\*\*)/g)) {
+    if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+      const strong = document.createElement("strong");
+      strong.textContent = part.slice(2, -2);
+      el.appendChild(strong);
+    } else if (part) {
+      el.appendChild(document.createTextNode(part));
+    }
+  }
+}
 
 function merchantBubble(text) {
   const wrap = document.createElement("div");
