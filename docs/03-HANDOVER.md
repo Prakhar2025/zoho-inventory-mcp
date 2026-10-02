@@ -43,33 +43,36 @@ someone who was not here when it started.
 | Phase | Status | Notes |
 | --- | --- | --- |
 | P0 | done | scaffold and docs committed (first commit) |
-| P1 | blocked on user | user must create the Zoho account first |
+| P1 | done | auth verified live, LoomKart org seeded (see Verified facts) |
 | P2 to P8 | not started | see roadmap |
 
 ## Immediate next action
 
-Phase P1, step 1 (user action, about 10 minutes):
-
-1. Sign up at https://www.zoho.com/in/inventory/ (India data center) and create an organization.
-   Choose the Free plan when asked. No card needed.
-2. Add a few fictional customers, items, and sales orders by hand if the agent has not yet written
-   `scripts/seed_demo_data.py`, or wait for the script (preferred: wait, the script seeds
-   everything consistently).
-3. Go to https://api-console.zoho.in, choose Self Client, create one, and copy the client id and
-   client secret into `.env` (copy `.env.example` to `.env` first).
-
-Phase P1, step 2 (agent action, right after step 1): write `scripts/get_refresh_token.py` (grant-code
-URL with read scopes, exchange code for tokens, print/save refresh token), then
-`scripts/seed_demo_data.py`. Verify raw API calls. Record the working scope strings and base URLs in
-the "Verified facts" section below.
+Phase P2 (agent action, no user input needed): build the connector core. Create the venv
+(`py -3.12 -m venv .venv` then `source .venv/Scripts/activate`), `pip install -e ".[dev]"`,
+then implement auth.py, rate_limiter.py, client.py, models.py, errors.py per
+docs/01-ARCHITECTURE.md, with unit tests (respx) and `scripts/smoke_live.py`. Acceptance:
+pytest green and the smoke script prints real seeded data. Nothing here needs the user.
 
 ## Verified facts (fill in as phases complete; trust nothing not written here)
 
-- OAuth token endpoint (IN DC): `https://accounts.zoho.in/oauth/v2/token` (to be verified in P1)
-- Inventory API base (IN DC): `https://www.zohoapis.in/inventory/v1` (to be verified in P1)
-- Working OAuth scopes: not yet verified
-- Free plan limits: 1,000 API calls per day, 5 concurrent (source: Zoho KB, re-verify against
-  live behavior in P1)
+- OAuth token endpoint (IN DC), verified live: `https://accounts.zoho.in/oauth/v2/token`
+- Inventory API base (IN DC), verified live: `https://www.zohoapis.in/inventory/v1`
+- The `/organizations` endpoint returns `organization_id` (not `id`); org id is stored in `.env`
+- Org-scoped endpoints take the org id via the `Organization-Id` header (verified) or an
+  `organization_id` query parameter
+- Working read scopes (connector token): settings.READ, items.READ, salesorders.READ,
+  contacts.READ under the `ZohoInventory.` prefix
+- Seeding scopes needed READ **and** CREATE per entity; create-only scopes fail list calls with
+  HTTP 401 code 57 ("not authorized")
+- Sales order status transition endpoint, verified live: `POST /salesorders/{id}/status/confirmed`
+- API-created sales orders default to status `draft`; confirming is a separate call
+- Grant codes from the Self Client "Generate Code" tab are single use and expire in 10 minutes
+- Free plan live behavior: 1 call per second spacing produced zero 429s while seeding ~40 calls
+- Seeded demo data: 6 fictional customers, 8 items (LK- prefixes), 12 sales orders spread over
+  the last 4 weeks (10 confirmed, 2 draft), reference numbers `LK-SO-*`
+- The seeding token lives in `.env` as `ZOHO_SEED_REFRESH_TOKEN` (write scopes, revocable); the
+  connector token `ZOHO_REFRESH_TOKEN` stays read-only
 - Actual model id used for the Bedrock demo agent: decided in P4, record here
 
 ## Pitfalls learned so far

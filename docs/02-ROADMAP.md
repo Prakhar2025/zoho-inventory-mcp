@@ -15,15 +15,15 @@ status table at the bottom in sync with docs/03-HANDOVER.md.
 Goal: a free Zoho Inventory org (India data center) with fictional data, and the connector able to
 authenticate.
 
-- [ ] User creates a Zoho account and a Zoho Inventory org on the IN data center (free plan)
-- [ ] Create an API Console Self Client, write down client id and secret in `.env`
-- [ ] `scripts/get_refresh_token.py`: generates the grant-code URL with read scopes, exchanges the
+- [x] User creates a Zoho account and a Zoho Inventory org on the IN data center (free plan)
+- [x] Create an API Console Self Client, write down client id and secret in `.env`
+- [x] `scripts/get_refresh_token.py`: generates the grant-code URL with read scopes, exchanges the
       code for tokens, saves the refresh token into `.env`
-- [ ] Record the exact OAuth scope strings that worked, and the API base URL for the IN DC, in
+- [x] Record the exact OAuth scope strings that worked, and the API base URL for the IN DC, in
       docs/03-HANDOVER.md
-- [ ] `scripts/seed_demo_data.py`: creates about 8 items and 12 sales orders (mixed statuses:
+- [x] `scripts/seed_demo_data.py`: creates about 8 items and 12 sales orders (mixed statuses:
       fulfilled, unfulfilled, overdue, cancelled) plus customer names, via the API
-- [ ] Verify the raw API works: one manual GET for items and one for sales orders
+- [x] Verify the raw API works: one manual GET for items and one for sales orders
 
 Acceptance: seed script runs green, data visible in the Zoho UI, a raw authenticated GET works.
 
@@ -113,7 +113,7 @@ Acceptance: form submitted with a working, accessible link.
 | Phase | Status | Notes |
 | --- | --- | --- |
 | P0 | done | scaffold and docs committed |
-| P1 | blocked on user | user must create the Zoho account first |
+| P1 | done | auth verified live, org seeded with fictional data |
 | P2 | not started | |
 | P3 | not started | |
 | P4 | not started | |
