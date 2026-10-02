@@ -7,6 +7,7 @@ mapping from HTTP and envelope errors onto the connector's error taxonomy.
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass
 from typing import Any
 
@@ -98,22 +99,30 @@ class ZohoInventoryClient:
     async def search_items(self, query: str, *, limit: int = 10) -> list[Item]:
         """Search items by keyword in name or SKU.
 
-        The query goes to Zoho as `search_text`, and results are filtered again
-        locally so relevance holds even if the server matches loosely.
+        The query goes to Zoho as `search_text` first. Local matching is
+        token-based with plural and prefix tolerance ("jaipur bedsheets" finds
+        "Jaipur Block Print Bedsheet"). When the server-side search returns
+        nothing (it matches whole phrases strictly), the catalog is scanned
+        locally instead, which keeps natural-language queries working at the
+        cost of one extra list call.
         """
-        needle = query.strip().casefold()
-        if not needle:
+        if not query.strip():
             return []
         payload = await self._request(
             "GET", "/items", params={"search_text": query.strip(), "per_page": _clamp_per_page(limit)}
         )
-        matches = [
-            Item.model_validate(raw)
-            for raw in payload.get("items", [])
-            if needle in (raw.get("name") or "").casefold()
-            or needle in (raw.get("sku") or "").casefold()
-        ]
+        matches = self._filter_items(payload.get("items", []), query)
+        if not matches:
+            payload = await self._request("GET", "/items", params={"per_page": MAX_PER_PAGE})
+            matches = self._filter_items(payload.get("items", []), query)
         return matches[: max(limit, 1)]
+
+    def _filter_items(self, raw_items: list[Any], query: str) -> list[Item]:
+        return [
+            Item.model_validate(raw)
+            for raw in raw_items
+            if _query_matches(query, raw.get("name"), raw.get("sku"), raw.get("description"))
+        ]
 
     # ------------------------------------------------------ sales orders
 
@@ -153,21 +162,35 @@ class ZohoInventoryClient:
             raise
 
     async def search_sales_orders(self, query: str, *, limit: int = 10) -> list[SalesOrder]:
-        """Search sales orders by keyword (customer name or order number)."""
-        needle = query.strip().casefold()
-        if not needle:
+        """Search sales orders by keyword (customer name or order number).
+
+        Uses the same strategy as item search: server `search_text` first,
+        token-based local filtering, and a local scan fallback when the server
+        finds nothing (order history is scanned one page deep, which covers
+        free-plan orgs comfortably).
+        """
+        if not query.strip():
             return []
         payload = await self._request(
             "GET", "/salesorders", params={"search_text": query.strip(), "per_page": _clamp_per_page(limit)}
         )
-        matches = [
-            SalesOrder.model_validate(raw)
-            for raw in payload.get("salesorders", [])
-            if needle in (raw.get("customer_name") or "").casefold()
-            or needle in (raw.get("salesorder_number") or "").casefold()
-            or needle in (raw.get("reference_number") or "").casefold()
-        ]
+        matches = self._filter_orders(payload.get("salesorders", []), query)
+        if not matches:
+            payload = await self._request("GET", "/salesorders", params={"per_page": MAX_PER_PAGE})
+            matches = self._filter_orders(payload.get("salesorders", []), query)
         return matches[: max(limit, 1)]
+
+    def _filter_orders(self, raw_orders: list[Any], query: str) -> list[SalesOrder]:
+        return [
+            SalesOrder.model_validate(raw)
+            for raw in raw_orders
+            if _query_matches(
+                query,
+                raw.get("customer_name"),
+                raw.get("salesorder_number"),
+                raw.get("reference_number"),
+            )
+        ]
 
     # ------------------------------------------------------------ internals
 
@@ -252,6 +275,41 @@ def _build_page[T](records: list[T], page: int, per_page: int, payload: dict[str
     context = payload.get("page_context") or {}
     has_more = bool(context.get("has_more_page", len(records) >= _clamp_per_page(per_page)))
     return Page(records=records, page=page, per_page=per_page, has_more=has_more)
+
+
+def _query_matches(query: str, *fields: str | None) -> bool:
+    """Token-based relevance check across the given fields.
+
+    Every query token must match some field. A token matches when it appears
+    as a substring (covering SKUs like lk-rug) or when a field word and the
+    token share a prefix of at least three characters (covering plurals and
+    stems like bedsheets vs bedsheet).
+    """
+    tokens = [token for token in query.strip().casefold().split() if token]
+    if not tokens:
+        return False
+    for token in tokens:
+        if not any(_token_in_field(token, field) for field in fields):
+            return False
+    return True
+
+
+def _token_in_field(token: str, field: str | None) -> bool:
+    haystack = (field or "").casefold()
+    if not haystack:
+        return False
+    if token in haystack:
+        return True
+    return any(_shares_prefix(token, word) for word in re.findall(r"[a-z0-9]+", haystack))
+
+
+def _shares_prefix(token: str, word: str) -> bool:
+    """Plural and stem tolerance, guarded against short-word false matches."""
+    if token == word:
+        return True
+    if len(word) >= 3 and token.startswith(word):
+        return True
+    return len(token) >= 3 and word.startswith(token)
 
 
 def _parse_retry_after(value: str | None) -> float | None:

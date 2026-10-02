@@ -284,6 +284,56 @@ async def test_search_items_by_sku(client, respx_mock):
     assert [item.item_id for item in matches] == ["i2"]
 
 
+async def test_search_items_tolerates_plurals(client, respx_mock):
+    respx_mock.get(f"{API_BASE}/items").mock(
+        return_value=httpx.Response(200, json={"code": 0, "items": [ITEM_A, ITEM_B]})
+    )
+
+    # "jaipur bedsheets" must find "Jaipur Block Print Bedsheet".
+    matches = await client.search_items("jaipur bedsheets")
+
+    assert [item.item_id for item in matches] == ["i1"]
+
+
+async def test_search_items_requires_every_token(client, respx_mock):
+    respx_mock.get(f"{API_BASE}/items").mock(
+        return_value=httpx.Response(200, json={"code": 0, "items": [ITEM_A, ITEM_B]})
+    )
+
+    # "jute" only appears in the rug's name; the bedsheet must not match.
+    matches = await client.search_items("jute rug")
+
+    assert [item.item_id for item in matches] == ["i2"]
+
+
+async def test_search_items_falls_back_to_local_scan(client, respx_mock):
+    """Zoho's search_text matches whole phrases strictly; the local scan must rescue it."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "search_text" in request.url.params:
+            return httpx.Response(200, json={"code": 0, "items": []})
+        return httpx.Response(200, json={"code": 0, "items": [ITEM_A, ITEM_B]})
+
+    respx_mock.get(f"{API_BASE}/items").mock(side_effect=handler)
+
+    matches = await client.search_items("jaipur bedsheets")
+
+    assert [item.item_id for item in matches] == ["i1"]
+
+
+async def test_search_orders_falls_back_to_local_scan(client, respx_mock):
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "search_text" in request.url.params:
+            return httpx.Response(200, json={"code": 0, "salesorders": []})
+        return httpx.Response(200, json={"code": 0, "salesorders": [ORDER]})
+
+    respx_mock.get(f"{API_BASE}/salesorders").mock(side_effect=handler)
+
+    matches = await client.search_sales_orders("aarav sharma")
+
+    assert [order.salesorder_id for order in matches] == ["so1"]
+
+
 async def test_search_items_with_blank_query_makes_no_call(client, respx_mock):
     route = respx_mock.get(f"{API_BASE}/items").mock(return_value=httpx.Response(200, json={}))
 
