@@ -23,6 +23,10 @@ agent = [
 evals = [
     "pyyaml>=3.14",
 ]
+console = [
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+]
 
 [build-system]
 requires = ["hatchling"]

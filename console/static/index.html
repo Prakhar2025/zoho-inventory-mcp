@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoomKart Ops Console</title>
+<link rel="stylesheet" href="/console.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">LK</span>
+    <div class="brand-text">
+      <strong>LoomKart</strong>
+      <span>Merchant Ops Console</span>
+    </div>
+  </div>
+  <div class="top-meta">
+    <span class="pill pill-read" title="Enforced by OAuth scopes, tool annotations, and code">Read-only</span>
+    <span class="chip" id="org-chip">Zoho &middot; IN</span>
+    <span class="chip chip-mono" id="model-chip">agent</span>
+    <span class="conn" id="conn"><i class="dot dot-idle"></i><span>Connecting</span></span>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="chat">
+    <div class="messages" id="messages">
+      <div class="empty" id="empty">
+        <h1>Ask about the business</h1>
+        <p>The agent answers from live Zoho Inventory data using six read-only tools.
+           Every tool call is traced on the right as it happens.</p>
+        <div class="chips">
+          <button class="suggest" data-q="What did Sneha Iyer order, exactly?">What did Sneha Iyer order?</button>
+          <button class="suggest" data-q="Which orders are still in draft status?">Which orders are still drafts?</button>
+          <button class="suggest" data-q="Do we stock jaipur bedsheets, and at what price?">Jaipur bedsheets in stock?</button>
+        </div>
+      </div>
+    </div>
+    <form class="composer" id="composer">
+      <input id="input" autocomplete="off" spellcheck="false"
+             placeholder="Ask about orders, items, customers, totals...">
+      <button type="submit" id="send" disabled>Ask</button>
+    </form>
+  </section>
+
+  <aside class="rail">
+    <div class="rail-head">
+      <span class="label">Tool activity</span>
+      <span class="label-count" id="tool-count">0 calls</span>
+    </div>
+    <div class="tools" id="tools">
+      <div class="tools-empty" id="tools-empty">No tool calls yet</div>
+    </div>
+
+    <div class="card">
+      <div class="card-row"><span>Questions</span><b id="stat-questions">0</b></div>
+      <div class="card-row"><span>Tool calls</span><b id="stat-calls">0</b></div>
+      <div class="card-row"><span>Avg tool time</span><b id="stat-avg">&ndash;</b></div>
+      <div class="card-row"><span>Tokens in / out</span><b id="stat-tokens">&ndash;</b></div>
+    </div>
+
+    <p class="audit-note">Every call is appended to <code>logs/audit.jsonl</code>
+       with arguments, duration, and outcome.</p>
+  </aside>
+</main>
+
+<script src="/console.js"></script>
+</body>
+</html>
