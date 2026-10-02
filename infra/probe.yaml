@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Probe stack: verifies this account accepts AWS::Lambda::Url before the real deploy."
+
+Resources:
+  ProbeFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: zohomcp-dev-probe
+      Runtime: python3.12
+      Handler: index.handler
+      MemorySize: 128
+      Timeout: 10
+      Role: !GetAtt ProbeRole.Arn
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              return {"statusCode": 200, "body": "probe ok"}
+
+  ProbeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "zohomcp-dev-probe-${AWS::AccountId}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: logs
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+
+  ProbeUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt ProbeFunction.Arn
+      AuthType: NONE
+
+Outputs:
+  ProbeUrl:
+    Value: !GetAtt ProbeUrl.FunctionUrl

@@ -1,0 +1,221 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  "Zoho Inventory MCP console hosting: static console on S3, FastAPI backend via
+  Mangum on Lambda behind API Gateway and CloudFront. Uses the antares-dev
+  pattern proven live on this account (public-read S3 origin, REST API proxy,
+  manual API Gateway restage; anonymous Lambda function URLs are blocked on
+  this account, so no function URLs)."
+
+Parameters:
+  DeployBucketName:
+    Type: String
+  ZipObjectKey:
+    Type: String
+  ZohoClientId:
+    Type: String
+    NoEcho: true
+  ZohoClientSecret:
+    Type: String
+    NoEcho: true
+  ZohoRefreshToken:
+    Type: String
+    NoEcho: true
+  ZohoOrgId:
+    Type: String
+  BedrockModelId:
+    Type: String
+    Default: global.amazon.nova-2-lite-v1:0
+
+Resources:
+  ConsoleBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "zohomcp-dev-console-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: false
+        RestrictPublicBuckets: false
+
+  ConsoleBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ConsoleBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: PublicReadConsoleObjects
+            Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: !Sub "${ConsoleBucket.Arn}/*"
+
+  BackendRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "zohomcp-dev-backend-${AWS::AccountId}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: backend-minimal
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/zohomcp-dev-backend:*"
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource:
+                  - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/amazon/nova-*"
+                  - !Sub "arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/*"
+
+  BackendFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: zohomcp-dev-backend
+      Runtime: python3.12
+      Architectures: [x86_64]
+      MemorySize: 512
+      Timeout: 25
+      Handler: handler.handler
+      Role: !GetAtt BackendRole.Arn
+      Code:
+        S3Bucket: !Ref DeployBucketName
+        S3Key: !Ref ZipObjectKey
+      Environment:
+        Variables:
+          ZOHO_CLIENT_ID: !Ref ZohoClientId
+          ZOHO_CLIENT_SECRET: !Ref ZohoClientSecret
+          ZOHO_REFRESH_TOKEN: !Ref ZohoRefreshToken
+          ZOHO_ORG_ID: !Ref ZohoOrgId
+          ZOHO_DC: "in"
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+          AUDIT_LOG_PATH: /tmp/audit.jsonl
+          LOG_LEVEL: INFO
+
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: zohomcp-dev-api
+      EndpointConfiguration:
+        Types: [REGIONAL]
+
+  ApiProxyResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !GetAtt RestApi.RootResourceId
+      PathPart: "{proxy+}"
+
+  ApiProxyMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApi
+      ResourceId: !Ref ApiProxyResource
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BackendFunction.Arn}/invocations"
+
+  ApiRootMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApi
+      ResourceId: !GetAtt RestApi.RootResourceId
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BackendFunction.Arn}/invocations"
+
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: [ApiProxyMethod, ApiRootMethod]
+    Properties:
+      RestApiId: !Ref RestApi
+
+  ApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref RestApi
+      DeploymentId: !Ref ApiDeployment
+      StageName: dev
+
+  ApiPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref BackendFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*"
+
+  UrlRewriteFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: zohomcp-dev-index-rewrite
+      AutoPublish: true
+      FunctionConfig:
+        Comment: Serve index.html for directory roots (S3 REST origin does not).
+        Runtime: cloudfront-js-2.0
+      FunctionCode: |
+        function handler(event) {
+          var request = event.request;
+          var uri = request.uri;
+          if (uri.endsWith("/")) {
+            request.uri = uri + "index.html";
+          } else if (!uri.split("/").pop().includes(".")) {
+            request.uri = uri + "/index.html";
+          }
+          return request;
+        }
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: Zoho Inventory MCP console
+        Enabled: true
+        HttpVersion: http2
+        DefaultRootObject: index.html
+        Origins:
+          - Id: site-origin
+            DomainName: !GetAtt ConsoleBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: site-origin
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt UrlRewriteFunction.FunctionMetadata.FunctionARN
+        CacheBehaviors: []
+        Restrictions:
+          GeoRestriction:
+            RestrictionType: none
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+Outputs:
+  PublicUrl:
+    Value: !Sub "https://${Distribution.DomainName}"
+  ApiBaseUrl:
+    Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/dev"
+  DistributionId:
+    Value: !Ref Distribution
+  ConsoleBucketName:
+    Value: !Ref ConsoleBucket

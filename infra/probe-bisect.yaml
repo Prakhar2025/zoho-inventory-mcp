@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Probe: API Gateway REST with greedy proxy+ and ANY method plus deployment and stage."
+
+Resources:
+  ProbeFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: zohomcp-probe-api-fn
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !GetAtt ProbeRole.Arn
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              return {"statusCode": 200, "body": "ok"}
+
+  ProbeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "zohomcp-probe-api-role-${AWS::AccountId}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: logs
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+                Resource: "*"
+
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: zohomcp-probe-api
+      EndpointConfiguration:
+        Types: [REGIONAL]
+
+  ProxyResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !GetAtt RestApi.RootResourceId
+      PathPart: "{proxy+}"
+
+  ProxyMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApi
+      ResourceId: !Ref ProxyResource
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProbeFunction.Arn}/invocations"
+
+  RootMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApi
+      ResourceId: !GetAtt RestApi.RootResourceId
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProbeFunction.Arn}/invocations"
+
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: [ProxyMethod, RootMethod]
+    Properties:
+      RestApiId: !Ref RestApi
+
+  ApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref RestApi
+      DeploymentId: !Ref ApiDeployment
+      StageName: dev
+      ThrottlingBurstLimit: 20
+      ThrottlingRateLimit: 10
+
+  ApiPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProbeFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*"

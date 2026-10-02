@@ -15,6 +15,7 @@ htmlcov/
 
 # Local logs and artifacts
 logs/
+.aws-lambda-build/
 *.jsonl
 !evals/data/*.jsonl
 

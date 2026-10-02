@@ -1,0 +1,56 @@
+{
+    "StackEvents": [
+        {
+            "StackId": "arn:aws:cloudformation:us-east-1:846719029074:stack/zohomcp-dev/d6dfdbb0-be42-11f1-b076-12219da131f1",
+            "EventId": "da808210-be42-11f1-95ba-0eeb5ac9f371",
+            "StackName": "zohomcp-dev",
+            "OperationId": "be46baad-e4c6-46fc-b9aa-a8135a22d7b4",
+            "LogicalResourceId": "zohomcp-dev",
+            "PhysicalResourceId": "arn:aws:cloudformation:us-east-1:846719029074:stack/zohomcp-dev/d6dfdbb0-be42-11f1-b076-12219da131f1",
+            "ResourceType": "AWS::CloudFormation::Stack",
+            "Timestamp": "2026-10-02T09:22:56.796000+00:00",
+            "ResourceStatus": "ROLLBACK_COMPLETE",
+            "ClientRequestToken": "df810b69-f696-47c9-a8e6-a9e1304740eb"
+        },
+        {
+            "StackId": "arn:aws:cloudformation:us-east-1:846719029074:stack/zohomcp-dev/d6dfdbb0-be42-11f1-b076-12219da131f1",
+            "EventId": "d99e1150-be42-11f1-b1d7-1239b8ff9379",
+            "StackName": "zohomcp-dev",
+            "OperationId": "be46baad-e4c6-46fc-b9aa-a8135a22d7b4",
+            "LogicalResourceId": "zohomcp-dev",
+            "PhysicalResourceId": "arn:aws:cloudformation:us-east-1:846719029074:stack/zohomcp-dev/d6dfdbb0-be42-11f1-b076-12219da131f1",
+            "ResourceType": "AWS::CloudFormation::Stack",
+            "Timestamp": "2026-10-02T09:22:55.301000+00:00",
+            "ResourceStatus": "ROLLBACK_IN_PROGRESS",
+            "ResourceStatusReason": "Validation failure detected. See the operation's FAILED event for details.",
+            "ClientRequestToken": "df810b69-f696-47c9-a8e6-a9e1304740eb"
+        },
+        {
+            "StackId": "arn:aws:cloudformation:us-east-1:846719029074:stack/zohomcp-dev/d6dfdbb0-be42-11f1-b076-12219da131f1",
+            "EventId": "zohomcp-dev-699b237d-eef7-4a74-a39e-146f20fb7d6a",
+            "StackName": "zohomcp-dev",
+            "OperationId": "d6e1b070-be42-11f1-b076-12219da131f1",
+            "LogicalResourceId": "zohomcp-dev",
+            "PhysicalResourceId": "arn:aws:cloudformation:us-east-1:846719029074:stack/zohomcp-dev/d6dfdbb0-be42-11f1-b076-12219da131f1",
+            "ResourceType": "AWS::CloudFormation::Stack",
+            "Timestamp": "2026-10-02T09:22:55.095000+00:00",
+            "ResourceStatus": "CREATE_FAILED",
+            "ResourceStatusReason": "Validation failed with 1 error(s). Call DescribeEvents to retrieve the full list of issues with resource and property details, resolve each error, then retry the operation.",
+            "ClientRequestToken": "df810b69-f696-47c9-a8e6-a9e1304740eb",
+            "DetailedStatus": "VALIDATION_FAILED"
+        },
+        {
+            "StackId": "arn:aws:cloudformation:us-east-1:846719029074:stack/zohomcp-dev/d6dfdbb0-be42-11f1-b076-12219da131f1",
+            "EventId": "d6e1b070-be42-11f1-b076-12219da131f1",
+            "StackName": "zohomcp-dev",
+            "OperationId": "d6e1b070-be42-11f1-b076-12219da131f1",
+            "LogicalResourceId": "zohomcp-dev",
+            "PhysicalResourceId": "arn:aws:cloudformation:us-east-1:846719029074:stack/zohomcp-dev/d6dfdbb0-be42-11f1-b076-12219da131f1",
+            "ResourceType": "AWS::CloudFormation::Stack",
+            "Timestamp": "2026-10-02T09:22:50.789000+00:00",
+            "ResourceStatus": "CREATE_IN_PROGRESS",
+            "ResourceStatusReason": "User Initiated",
+            "ClientRequestToken": "df810b69-f696-47c9-a8e6-a9e1304740eb"
+        }
+    ]
+}
