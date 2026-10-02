@@ -7,7 +7,7 @@ from types import SimpleNamespace
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from console.backend import map_stream_event, sse_frame
+from console.events import map_stream_event, sse_frame
 
 
 def test_sse_frame_shape():
