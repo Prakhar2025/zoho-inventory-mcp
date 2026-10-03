@@ -130,7 +130,7 @@ Design decisions worth reading: [docs/01-ARCHITECTURE.md](docs/01-ARCHITECTURE.m
 
 ## Quality signals
 
-- 39 unit tests, fully hermetic (no network), covering token refresh races, retry policy,
+- 48 unit tests, fully hermetic (no network), covering token refresh races, retry policy,
   pagination, search relevance, and error mapping.
 - 16 eval cases scored against the live agent on Bedrock: expected tools used, expected
   facts in the answer. Current run: 16/16 ([report](evals/report.md)).
