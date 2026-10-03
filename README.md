@@ -9,7 +9,7 @@ rate-limit handling, structured errors, an audit log, and an eval suite.
 Built as the assignment submission for the **Forward Deployed Engineer, Agent Studio** role
 at Razorpay.
 
-Demo video: link added at submission (script in [docs/05-DEMO-VIDEO-SCRIPT.md](docs/05-DEMO-VIDEO-SCRIPT.md)).
+Demo video: [Watch 75-second walkthrough](https://github.com/user-attachments/assets/4be3b703-05f3-499e-9593-941cc8701109) (script in [docs/05-DEMO-VIDEO-SCRIPT.md](docs/05-DEMO-VIDEO-SCRIPT.md)).
 
 ## The merchant problem this solves
 
@@ -22,12 +22,13 @@ of a login, a search, and a screenshot.
 
 ## The demo, in 2 minutes
 
-![Console answering merchant questions live](docs/demo/console.png)
+https://github.com/user-attachments/assets/4be3b703-05f3-499e-9593-941cc8701109
 
-The video above the fold: [docs/demo/zohomcp-demo.mp4](docs/demo/zohomcp-demo.mp4) (1m15s,
-narrated) walks through the problem, a live session of the console answering three merchant
-questions while tool calls stream into the trace panel, and the engineering that makes it
-trustworthy. YouTube link added at submission.
+The video above the fold (1m 15s, narrated) walks through the problem, a live session of the
+console answering three merchant questions while tool calls stream into the trace panel, and the
+engineering that makes it trustworthy. Raw file in [docs/demo/zohomcp-demo.mp4](docs/demo/zohomcp-demo.mp4).
+
+![Console answering merchant questions live](docs/demo/console.png)
 
 ## What ships in this repo
 
