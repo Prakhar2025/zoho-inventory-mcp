@@ -20,7 +20,7 @@ into Zoho and click around. The connector is the missing pipe: it gives the agen
 read-only access to the merchant's own data, so the questions become one message instead
 of a login, a search, and a screenshot.
 
-## The demo, in 2 minutes
+## The demo, in 75 seconds
 
 https://github.com/user-attachments/assets/4be3b703-05f3-499e-9593-941cc8701109
 
