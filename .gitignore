@@ -23,3 +23,7 @@ logs/
 .DS_Store
 Thumbs.db
 desktop.ini
+.zcodeignore
+
+# Interview prep (local only, never commit)
+prep/
